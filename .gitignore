@@ -1,0 +1,4 @@
+.DS_Store
+resultados/*.md
+!resultados/.gitkeep
+!resultados/README.md
