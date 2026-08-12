@@ -37,7 +37,7 @@ Dentro de Claude Code, escribe:
 /diagnosticar-topologia
 ```
 
-Claude te entrevista sobre proceso, entrada, salida, roles, dependencias y necesidad de comunicación entre pares. Al final propone una de cuatro opciones:
+Claude te entrevista sobre proceso, entrada, salida, roles, dependencias, comunicación entre pares, necesidad de herramientas externas, memoria entre corridas y controles por agente. Al final propone una de cuatro opciones:
 
 | Decisión | Significa |
 |---|---|
@@ -46,7 +46,7 @@ Claude te entrevista sobre proceso, entrada, salida, roles, dependencias y neces
 | **Swarm** | Los roles necesitan tareas compartidas y comunicación directa entre pares. |
 | **Evidencia insuficiente** | Todavía faltan datos para justificar una arquitectura. |
 
-No se guarda nada sin tu confirmación. La decisión vive en `arquitectura/decision.md`.
+No se guarda nada sin tu confirmación. El diagnóstico deja `arquitectura/decision.md`, `integraciones.md` y `memoria/estado.md`. Estos últimos dos archivos declaran si necesitas MCP, qué rol puede usar cada herramienta, qué debe persistir y quién puede escribir ese estado.
 
 ---
 
@@ -54,11 +54,11 @@ No se guarda nada sin tu confirmación. La decisión vive en `arquitectura/decis
 
 | Si elegiste | Corre dentro de Claude Code | Qué crea |
 |---|---|---|
-| **Nest** | `/configurar-nest` | `entrada.md`, `config/nest.md`, líder, especialistas y contrato de runtime. |
-| **Swarm** | `/configurar-swarm` | `entrada.md`, `config/swarm.md`, teammates y contrato de Agent Teams. |
+| **Nest** | `/configurar-nest` | `entrada.md`, `config/nest.md`, líder, especialistas, harnesses y contrato de runtime. |
+| **Swarm** | `/configurar-swarm` | `entrada.md`, `config/swarm.md`, teammates, harnesses y contrato de Agent Teams. |
 | **Un solo agente** | No configures múltiples agentes todavía. | Empieza con prompt, reglas y evals. |
 
-Los comandos hacen preguntas de una en una, proponen el diseño y piden confirmación antes de escribir. No deben dejar nombres inventados, entrada vacía, salida subjetiva ni paradas vagas.
+Los comandos hacen preguntas de una en una, proponen el diseño y piden confirmación antes de escribir. Generan un harness por rol en `harnesses/`: entrada, herramientas autorizadas, salida verificable, checker, límite y fallback. No deben dejar nombres inventados, entrada vacía, salida subjetiva, permisos externos ambiguos ni paradas vagas.
 
 ---
 
@@ -78,7 +78,7 @@ Después, en Terminal, ejecuta el preflight runtime:
 bash scripts/verificar-runtime.sh
 ```
 
-Este segundo check revisa los archivos que el launcher realmente necesita: decisión confirmada, configuración, agentes, entrada no vacía, salida, verificación, cuatro paradas y escalamiento. Si bloquea, lee el mensaje, vuelve a Claude Code y corrige solo ese hueco.
+Este segundo check revisa los archivos que el launcher realmente necesita: decisión confirmada, configuración, agentes, entrada no vacía, salida, verificación, cuatro paradas, escalamiento, harnesses por rol, permisos MCP y ownership de memoria. Si bloquea, lee el mensaje, vuelve a Claude Code y corrige solo ese hueco.
 
 ---
 
@@ -138,6 +138,9 @@ SWARM TERMINADO: teammates, tareas compartidas y mensajes entre pares observados
 | `config/nest.md` o `config/swarm.md` | El contrato de roles, entrada, salida, verificaciones y paradas. |
 | `resultados/salida-nest.md` o `resultados/salida-swarm.md` | La evidencia de una primera corrida. |
 | `resultados/auditoria-configuracion.md` | Los huecos encontrados antes de correr. |
+| `integraciones.md` | Sistemas externos, permisos mínimos, confirmación humana y fallback. |
+| `memoria/estado.md` | Qué persiste, qué no, quién escribe y cómo se retiene. |
+| `harnesses/<rol>.md` | Entrada, herramientas, salida, checker, límite y fallback por agente. |
 
 La primera corrida no certifica producción. Sirve para aprender si tus roles, entrada, salida y paradas funcionan. Ajusta el diseño con la evidencia; no agregues más agentes solo porque la primera salida sea imperfecta.
 
@@ -154,8 +157,12 @@ config/nest.md o config/swarm.md    ← contrato runtime del patrón
 scripts/correr-*.sh                 ← launchers runtime
 resultados/                         ← auditorías y salidas locales; no se suben
 RUNTIME.md                          ← contrato y fallos seguros del runtime
+integraciones.md                    ← permisos y fallback de MCP
+memoria/estado.md                   ← contrato de memoria durable
+harnesses/                          ← harness obligatorio por líder y rol
+.mcp.json.example                   ← ejemplo local sin secretos
 ```
 
 ## Seguridad mínima
 
-No pegues secretos, API keys, datos personales ni documentos confidenciales en `entrada.md`. Empieza con un caso de prueba representativo y no sensible. Mantén el repo privado después de crear tu copia desde la plantilla.
+No pegues secretos, API keys, datos personales ni documentos confidenciales en `entrada.md`, `integraciones.md` o archivos versionados. Si necesitas MCP, usa `.mcp.json.example` para crear una `.mcp.json` **local** y no versionada; abre Claude Code, aprueba el workspace y confirma `claude mcp list` antes de correr. Toda escritura externa requiere confirmación humana explícita en `integraciones.md`. Empieza con un caso representativo y no sensible, y mantén privada tu copia del repo.

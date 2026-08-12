@@ -22,3 +22,14 @@ Un Nest se inicia con `claude --agent <lider>`. El líder debe delegar a los tip
 ## Evidencia mínima de una primera prueba
 
 Una primera prueba no prueba producción. Debe dejar un archivo en `resultados/`, la condición de salida observada, una captura o transcripción del runtime y un hueco documentado si una regla no pudo verificarse. El siguiente paso es usar esa evidencia para ajustar roles, entradas, paradas o decidir que la arquitectura fue excesiva.
+
+
+---
+
+## Extensiones operativas: MCP, memoria y harnesses
+
+Antes de abrir un launcher, el runtime carga tres contratos adicionales. `integraciones.md` declara si existe un MCP, qué servidor y herramienta puede utilizar cada rol, y si una acción externa requiere confirmación humana. La plantilla nunca conecta un MCP ni guarda credenciales automáticamente: `.mcp.json` es local, está ignorado por Git y debe aprobarse dentro de Claude Code. Si una integración requerida no aparece como `Connected` o `cached` en `claude mcp list`, el preflight bloquea la corrida.
+
+`memoria/estado.md` declara si el proceso necesita estado durable. Sin memoria durable, ningún harness puede escribir estado. Con memoria local o externa, existe exactamente un propietario de escritura; ese rol consolida los cambios después de verificar la salida. Los teammates pueden compartir tareas y mensajes durante una sesión, pero eso no es memoria persistente.
+
+Cada archivo `harnesses/<rol>.md` es el contrato verificable de un agente: objetivo, entrada, herramientas permitidas, restricciones, salida, checker, límite y fallback. Un agente sin harness no se considera configurado. El preflight bloquea la ejecución si falta un harness, si falta una sección o si más de un rol intenta escribir memoria durable.

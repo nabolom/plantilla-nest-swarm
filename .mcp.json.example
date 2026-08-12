@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mi-integracion": {
+      "type": "http",
+      "url": "https://REEMPLAZA-CON-URL-DEL-SERVIDOR-MCP"
+    }
+  }
+}

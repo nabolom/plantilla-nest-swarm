@@ -21,12 +21,15 @@ Haz cada pregunta y espera la respuesta antes de continuar.
 5. “¿Qué mensaje directo entre pares debe ocurrir antes de la síntesis? Nombra emisor, receptor y contenido.”
 6. “¿Qué debe producir el sistema en `resultados/salida-swarm.md` para que alguien pueda comprobarlo?”
 7. “Define las cuatro paradas: éxito, presupuesto o límite, no-progreso y escalamiento humano. ¿Quién recibe el escalamiento?”
+8. “Según `integraciones.md`, ¿algún teammate necesita un MCP? Para cada uno, dime servidor, herramienta exacta, lectura o escritura y confirmación humana si escribe. Si no hace falta, confirma que todos trabajan solo con archivos locales.”
+9. “Según `memoria/estado.md`, ¿qué información debe sobrevivir a la sesión? Nombra un único rol que consolida estado, qué guarda, qué nunca guarda y cuándo escala un conflicto.”
+10. “Para el líder y cada teammate, confirma: entrada mínima, herramientas permitidas, salida verificable, checker, límite y fallback. Eso será su harness.”
 
-Si no hay una razón concreta para mensajes entre pares y tareas compartidas, no configures Swarm: explica que Nest puede ser suficiente y pide volver a `/diagnosticar-topologia`.
+Si no hay una razón concreta para mensajes entre pares y tareas compartidas, no configures Swarm: explica que Nest puede ser suficiente y pide volver a `/diagnosticar-topologia`. Si no hay contrato de permisos, memoria y harnesses, no propongas archivos todavía.
 
 ## 2. Propuesta y confirmación
 
-Resume en una tabla: líder, teammates, tarea compartida, mensaje obligatorio, entrada, salida, verificación y cuatro paradas. Pregunta: **“¿Confirmas que escriba el runtime Swarm y sus teammates?”**
+Resume en una tabla: líder, teammates, tarea compartida, mensaje obligatorio, entrada, salida, verificación, cuatro paradas, MCPs requeridos, memoria y harnesses. Pregunta: **“¿Confirmas que escriba el runtime Swarm, sus teammates y sus controles operativos?”**
 
 No escribas ni sobrescribas archivos hasta obtener confirmación explícita.
 
@@ -79,13 +82,33 @@ Después incluye estas secciones exactas:
 - Presupuesto: [límite]
 - No-progreso: [regla]
 - Escalamiento humano: [persona o canal y disparador]
+
+## Integraciones autorizadas
+
+[solo rol → herramienta MCP exacta → lectura/escritura → confirmación humana. Si no hay MCP, escribe: Ninguna; solo archivos locales.]
+
+## Memoria y ownership
+
+[referencia a memoria/estado.md; único rol que consolida memoria durable después de la síntesis]
+
+## Harnesses
+
+[líder y cada teammate → harnesses/<rol>.md]
 ```
 
 ### C. Agentes teammates
 
-Para cada rol, escribe `.claude/agents/<rol>.md` con frontmatter que incluya `name`, `description`, `tools: [Read]` y `model: inherit`. El cuerpo debe indicar qué revisa, qué no puede inventar, qué publica en la tarea compartida, qué mensaje debe enviar a su par y su criterio de terminado.
+Para cada rol, escribe `.claude/agents/<rol>.md` con frontmatter que incluya `name`, `description`, herramientas mínimas y `model: inherit`. Por defecto usa `tools: [Read]`. Si un teammate requiere MCP, agrega solo la herramienta exacta permitida, por ejemplo `mcp__crm__buscar_cliente`; no uses comodines ni concedas escritura si no está declarada en `integraciones.md`. El cuerpo debe indicar que primero lee `harnesses/<rol>.md`, qué revisa, qué no puede inventar, qué publica en la tarea compartida, qué mensaje debe enviar a su par y su criterio de terminado. Si hay MCP, solo usa la herramienta exacta declarada para su rol y nunca realiza una escritura externa sin confirmación humana.
 
-No crees archivos `.claude/teams/`: Claude Code administra el runtime de Agent Teams fuera del proyecto. Los agentes de proyecto son definiciones reutilizables; el launcher inicia el team en la sesión.
+No crees archivos `.claude/teams/`: Claude Code administra el runtime de Agent Teams fuera del proyecto. Los agentes de proyecto son definiciones reutilizables; el launcher inicia el team en la sesión. El líder debe leer `config/swarm.md`, `integraciones.md`, `memoria/estado.md` y su propio harness antes de crear teammates; al finalizar, solo el rol declarado como `propietario_escritura` puede consolidar memoria durable.
+
+### D. Harnesses por agente
+
+Crea `harnesses/<lider>.md` y `harnesses/<rol>.md` para cada teammate, usando `harnesses/PLANTILLA-HARNESS-AGENTE.md`. Cada harness debe declarar entrada, herramientas, datos prohibidos, salida verificable, checker, límite y fallback. Solo un harness puede declarar `puede_escribir_estado: si`; debe coincidir exactamente con `propietario_escritura` de `memoria/estado.md` y será el rol que consolida memoria después de la síntesis. Sin memoria durable, todos declaran `no`.
+
+### E. Integración y memoria
+
+Completa `integraciones.md` y `memoria/estado.md` con las respuestas confirmadas. Si `requiere_mcp: si`, crea `.mcp.json` solo en la copia local del alumno a partir de `.mcp.json.example`; nunca escribas un token o secreto en un archivo versionado. Indica que debe abrir Claude Code, aprobar el workspace y verificar `claude mcp list` antes de correr.
 
 ## 4. Verificación y prueba
 

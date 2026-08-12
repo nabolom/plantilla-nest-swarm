@@ -59,6 +59,10 @@ prepare_runtime() {
     test -f ".claude/agents/${role}.md" || { echo "BLOQUEADO: falta .claude/agents/${role}.md" >&2; return 1; }
   done
 
+  # Los contratos operativos adicionales se validan antes de abrir Claude Code.
+  source "scripts/preflight-extensions.sh"
+  validate_extensions
+
   mkdir -p "$(dirname "$RUNTIME_OUTPUT")" resultados
   export RUNTIME_CONFIG RUNTIME_ARCHITECTURE RUNTIME_LEADER RUNTIME_ROLES RUNTIME_INPUT RUNTIME_OUTPUT
 }

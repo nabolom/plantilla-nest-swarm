@@ -2,3 +2,9 @@
 resultados/*.md
 !resultados/.gitkeep
 !resultados/README.md
+
+# Configuración local de MCP: puede contener URLs privadas o referencias a credenciales.
+.mcp.json
+
+# Estado operativo local: el contrato memoria/estado.md sí se versiona.
+memoria/estado-local.md
