@@ -1,12 +1,18 @@
-# Plantilla para configurar Nest o Swarm
+# Plantilla Nest y Swarm
 
-> **Primero diseña el flujo. Después decide si necesitas un agente, un Nest o un Swarm.**
+> **Primero diagnostica. Después configura. Finalmente corre una primera prueba.**
 
-Este repositorio es el espacio de trabajo para configurar **tu propio** sistema de agentes después de la S5. No contiene un caso resuelto: contiene las preguntas, comandos y archivos para convertir un proceso real en una configuración defendible.
+Este repo es una **plantilla ejecutable** para convertir un proceso propio en un sistema de Claude Code. No contiene un caso resuelto ni una arquitectura predeterminada. Claude te entrevista para decidir si necesitas un solo agente, un **Nest** o un **Swarm**; solo crea y ejecuta el patrón que la evidencia justifica.
+
+| Patrón | Cuándo tiene sentido | Qué corre |
+|---|---|---|
+| **Un solo agente** | Una persona/rol puede resolver la tarea con un prompt, reglas y evals. | No configures multiagente todavía. |
+| **Nest** | Especialistas independientes investigan o verifican partes del caso y reportan a un líder. | `bash scripts/correr-nest.sh` |
+| **Swarm** | Los roles deben ver tareas compartidas, intercambiar mensajes directos y ajustar decisiones entre pares. | `bash scripts/correr-swarm.sh` |
 
 ---
 
-## 1. Crea tu propia copia privada
+## 1. Crea tu copia privada
 
 En GitHub, pulsa **Use this template** → **Create a new repository**. Ponle el nombre que quieras y elige **Private**. Así tus reglas, procesos y conclusiones no quedan públicos.
 
@@ -15,10 +21,11 @@ Después abre Terminal y ejecuta:
 ```bash
 git clone https://github.com/TU-USUARIO/TU-REPO.git
 cd TU-REPO
+bash scripts/verificar-plantilla.sh
 claude
 ```
 
-> Reemplaza `TU-USUARIO/TU-REPO` por la URL de la copia privada que acabas de crear. `git clone` descarga tu copia; `cd` entra a esa carpeta; `claude` abre Claude Code dentro del proyecto.
+> Reemplaza `TU-USUARIO/TU-REPO` por la URL de tu copia privada. `git clone` descarga tu repo; `cd` entra a la carpeta; la verificación confirma que recibiste la plantilla completa; `claude` abre Claude Code dentro del proyecto.
 
 ---
 
@@ -30,7 +37,7 @@ Dentro de Claude Code, escribe:
 /diagnosticar-topologia
 ```
 
-Claude te entrevista sobre tu proceso, entradas, salida, roles, dependencias y necesidad de comunicación entre pares. Al final propone una de cuatro opciones:
+Claude te entrevista sobre proceso, entrada, salida, roles, dependencias y necesidad de comunicación entre pares. Al final propone una de cuatro opciones:
 
 | Decisión | Significa |
 |---|---|
@@ -45,17 +52,17 @@ No se guarda nada sin tu confirmación. La decisión vive en `arquitectura/decis
 
 ## 3. Configura solo el patrón elegido
 
-| Si elegiste | Corre | Qué crea |
+| Si elegiste | Corre dentro de Claude Code | Qué crea |
 |---|---|---|
-| **Nest** | `/configurar-nest` | Roles especializados, líder, contrato de salida, verificación y paradas. |
-| **Swarm** | `/configurar-swarm` | Roles, tarea compartida, mensajes entre pares, síntesis y condiciones de parada. |
-| **Un solo agente** | No configures múltiples agentes todavía. Escribe primero tu prompt y evals. | Un caso simple no se vuelve mejor por tener más agentes. |
+| **Nest** | `/configurar-nest` | `entrada.md`, `config/nest.md`, líder, especialistas y contrato de runtime. |
+| **Swarm** | `/configurar-swarm` | `entrada.md`, `config/swarm.md`, teammates y contrato de Agent Teams. |
+| **Un solo agente** | No configures múltiples agentes todavía. | Empieza con prompt, reglas y evals. |
 
-Los archivos de configuración quedan en `config/`. Los agentes de proyecto se crean en `.claude/agents/` solo después de que confirmes los roles.
+Los comandos hacen preguntas de una en una, proponen el diseño y piden confirmación antes de escribir. No deben dejar nombres inventados, entrada vacía, salida subjetiva ni paradas vagas.
 
 ---
 
-## 4. Verifica antes de correr
+## 4. Verifica la configuración antes de correr
 
 Dentro de Claude Code:
 
@@ -63,30 +70,92 @@ Dentro de Claude Code:
 /verificar-configuracion
 ```
 
-El comando revisa si existe un proceso definido, una decisión arquitectónica, una salida verificable, roles explícitos, condiciones de parada, escalamiento y una forma de comprobar el resultado.
+Ese comando audita el diseño y guarda una nota en `resultados/auditoria-configuracion.md`.
 
-También puedes ejecutar en Terminal:
+Después, en Terminal, ejecuta el preflight runtime:
 
 ```bash
-bash scripts/verificar-plantilla.sh
+bash scripts/verificar-runtime.sh
 ```
+
+Este segundo check revisa los archivos que el launcher realmente necesita: decisión confirmada, configuración, agentes, entrada no vacía, salida, verificación, cuatro paradas y escalamiento. Si bloquea, lee el mensaje, vuelve a Claude Code y corrige solo ese hueco.
+
+---
+
+## 5. Corre tu primera prueba
+
+### Si tu patrón es Nest
+
+En Terminal:
+
+```bash
+bash scripts/correr-nest.sh
+```
+
+El launcher abre Claude Code con el líder configurado. El líder lee tu entrada, delega a los especialistas declarados, espera los reportes, verifica y guarda la salida en:
+
+```text
+resultados/salida-nest.md
+```
+
+La corrida es válida solo si ves:
+
+```text
+SALIDA GUARDADA: resultados/salida-nest.md
+NEST TERMINADO: todos los reportes configurados fueron recibidos o se documentó el bloqueo.
+```
+
+### Si tu patrón es Swarm
+
+En Terminal:
+
+```bash
+bash scripts/correr-swarm.sh
+```
+
+El launcher activa Agent Teams y abre Claude Code con instrucciones de crear teammates usando los roles configurados. La corrida vale como Swarm solo si observas **teammates**, **una tarea compartida** y **un mensaje directo entre pares**. Al final debe escribir:
+
+```text
+resultados/salida-swarm.md
+```
+
+con este cierre:
+
+```text
+SALIDA GUARDADA: resultados/salida-swarm.md
+SWARM TERMINADO: teammates, tareas compartidas y mensajes entre pares observados.
+```
+
+> Agent Teams es experimental. Si no aparecen teammates y tarea compartida, escribe `/exit`; no cuentes esa sesión como Swarm válido. Registra el riesgo en `resultados/` y considera que Nest puede ser suficiente.
+
+---
+
+## 6. Qué entregas después de una primera prueba
+
+| Archivo | Qué demuestra |
+|---|---|
+| `arquitectura/decision.md` | Por qué elegiste un solo agente, Nest o Swarm. |
+| `config/nest.md` o `config/swarm.md` | El contrato de roles, entrada, salida, verificaciones y paradas. |
+| `resultados/salida-nest.md` o `resultados/salida-swarm.md` | La evidencia de una primera corrida. |
+| `resultados/auditoria-configuracion.md` | Los huecos encontrados antes de correr. |
+
+La primera corrida no certifica producción. Sirve para aprender si tus roles, entrada, salida y paradas funcionan. Ajusta el diseño con la evidencia; no agregues más agentes solo porque la primera salida sea imperfecta.
 
 ---
 
 ## Estructura del repo
 
 ```text
-proyecto.md                         ← el proceso y su salida
-arquitectura/decision.md            ← por qué elegiste un agente, Nest o Swarm
-config/nest.md o config/swarm.md    ← contrato del patrón elegido
-.claude/agents/                     ← roles que Claude crea tras tu confirmación
-resultados/                         ← trazas y conclusiones locales; no se suben
+proyecto.md                         ← proceso y salida verificable
+entrada.md                          ← primer caso real no sensible
+arquitectura/decision.md            ← por qué elegiste el patrón
+config/nest.md o config/swarm.md    ← contrato runtime del patrón
+.claude/agents/                     ← líder/especialistas o teammates generados
+scripts/correr-*.sh                 ← launchers runtime
+resultados/                         ← auditorías y salidas locales; no se suben
+RUNTIME.md                          ← contrato y fallos seguros del runtime
 ```
 
-## Entregable recomendado
+## Seguridad mínima
 
-Al final, deberías poder mostrar un `arquitectura/decision.md` y un archivo en `config/` que respondan tres preguntas:
-
-1. ¿Qué problema resuelve este sistema?
-2. ¿Por qué esta arquitectura es la mínima suficiente?
-3. ¿Cómo sabrás que funcionó y cuándo debe detenerse o escalar?
+No pegues secretos, API keys, datos personales ni documentos confidenciales en `entrada.md`. Empieza con un caso de prueba representativo y no sensible. Mantén el repo privado después de crear tu copia desde la plantilla.
